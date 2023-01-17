@@ -43,15 +43,11 @@ Functions.LoadCustomAsset = function(str)
 
         return "rbxassetid://".. numberId
     else
-        if isfile(str) then -- is local file
-            return Functions.GetAsset(str)
-        else
-            local fileName = "customObject_".. tick().. ".txt"
+        local fileName = "customObject_".. tick().. ".txt"
 
-            writefile(fileName, Functions.Request({Url = str, Method = "GET"}).Body)
+        writefile(fileName, Functions.Request({Url = str, Method = "GET"}).Body)
 
-            return Functions.GetAsset(fileName)
-        end
+        return Functions.GetAsset(fileName)
     end
 end
 
@@ -62,15 +58,11 @@ Functions.LoadCustomInstance = function(str)
 
             return game:GetObjects("rbxassetid://".. numberId)[1]
         else
-            if isfile(str) then -- is local file
-                return game:GetObjects(Functions.GetAsset(str))[1]
-            else
-                local fileName = "customObject_".. tick().. ".txt"
+            local fileName = "customObject_".. tick().. ".txt"
 
-                writefile(fileName, Functions.Request({Url = str, Method = "GET"}).Body)
+            writefile(fileName, Functions.Request({Url = str, Method = "GET"}).Body)
 
-                return game:GetObjects(Functions.GetAsset(fileName))[1]
-            end
+            return game:GetObjects(Functions.GetAsset(fileName))[1]
         end
     end
 end
