@@ -3,12 +3,135 @@
 local TS = game:GetService("TweenService")
 local HS = game:GetService("HttpService")
 local CG = game:GetService("CoreGui")
+local Players = game:GetService("Players")
 
 -- Variables
 
+local Plr = Players.LocalPlayer
+local Mouse = Plr:GetMouse()
+
+local UI = {
+    Color = {
+        Add = function(c1, c2)
+            local r, g, b = c1.R + c2.R, c1.G + c2.G, c1.B + c2.B
+            return Color3.fromRGB(math.min(r * 255, 255), math.min(g * 255, 255), math.min(b * 255, 255))
+        end,
+        Sub = function(c1, c2)
+            local r, g, b = c1.R - c2.R, c1.G - c2.G, c1.B - c2.B
+            return Color3.fromRGB(math.max(r * 255, 0), math.max(g * 255, 0), math.max(b * 255, 0))
+        end,
+        ToFormat = function(color3)
+            return "rgb(".. math.floor(math.min(color3.R * 255, 255)).. ", ".. math.floor(math.min(color3.G * 255, 255)).. ", ".. math.floor(math.min(color3.B * 255, 255)).. ")"
+        end,
+    },
+}
+
+local Functions = {
+    IsClosure = is_synapse_function or iskrnlclosure or isexecutorclosure,
+    SetIdentity = (syn and syn.set_thread_identity) or set_thread_identity or setthreadidentity or setthreadcontext,
+    GetIdentity = (syn and syn.get_thread_identity) or get_thread_identity or getthreadidentity or getthreadcontext,
+    Request = (syn and syn.request) or http_request or request,
+    QueueOnTeleport = (syn and syn.queue_on_teleport) or queue_on_teleport,
+    GetAsset = getsynasset or getcustomasset,
+}
+
+local ModuleScripts = {}
+
 local SelfModules = {
-	UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/qxkya/Discord-Prompt-Inviter/main/UI.lua"))(),
-	Functions = loadstring(game:HttpGet("https://raw.githubusercontent.com/qxkya/Discord-Prompt-Inviter/main/Functions.lua"))(),
+	UI = {
+        Create = function(class, properties, radius)
+            local instance = Instance.new(class)
+
+            for i, v in next, properties do
+                if i ~= "Parent" then
+                    if typeof(v) == "Instance" then
+                        v.Parent = instance
+                    else
+                        instance[i] = v
+                    end
+                end
+            end
+
+            if radius then
+                local uicorner = Instance.new("UICorner", instance)
+                uicorner.CornerRadius = radius
+            end
+
+            return instance
+        end,
+        MakeDraggable = function(obj, drag, smoothness)
+            local startPos, dragging = nil, false
+
+            drag.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                    startPos = Vector2.new(Mouse.X - obj.AbsolutePosition.X, Mouse.Y - obj.AbsolutePosition.Y)
+                end
+            end)
+
+            drag.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
+            end)
+
+            Mouse.Move:Connect(function()
+                if dragging then
+                    TS:Create(obj, TweenInfo.new(math.clamp(smoothness, 0, 1), Enum.EasingStyle.Sine), { Position = UDim2.new(0, Mouse.X - startPos.X, 0, Mouse.Y - startPos.Y) }):Play()
+                end
+            end)
+        end
+    },
+	Functions = {
+        GetPlayerByName = function(name)
+            for _, v in next, Players:GetPlayers() do
+                if v.Name:lower():find(name) or v.DisplayName:lower():find(name) then
+                    return v
+                end
+            end
+        end,
+
+       LoadModule = function(name)
+            for _, v in next, ModuleScripts do
+                if v.Name == name then
+                    return require(v)
+                end
+            end
+        end,
+
+        LoadCustomAsset = function(str)
+            if str == "" then
+                return ""
+
+            elseif str:find("rbxassetid://") or str:find("roblox.com") or tonumber(str) then
+                local numberId = str:gsub("%D", "")
+
+                return "rbxassetid://".. numberId
+            else
+                local fileName = "customObject_".. tick().. ".txt"
+
+                writefile(fileName, Functions.Request({Url = str, Method = "GET"}).Body)
+
+                return Functions.GetAsset(fileName)
+            end
+        end,
+
+        LoadCustomInstance = function(str)
+            if str ~= "" then
+                if str:find("rbxassetid://") or str:find("roblox.com") or tonumber(str) then
+                    local numberId = str:gsub("%D", "")
+
+                    return game:GetObjects("rbxassetid://".. numberId)[1]
+                else
+                    local fileName = "customObject_".. tick().. ".txt"
+
+                    writefile(fileName, Functions.Request({Url = str, Method = "GET"}).Body)
+
+                    return game:GetObjects(Functions.GetAsset(fileName))[1]
+                end
+            end
+        end
+    },
 }
 
 local Inviter = { Connections = {} }
@@ -19,7 +142,7 @@ local function getInviteCode(invite)
 	if string.find(invite, "/") then
 		for i = #invite, 1, -1 do
 			local char = string.sub(invite, i, i)
-			
+	
 			if char == "/" then
 				return string.sub(invite, i + 1, #invite)
 			end
