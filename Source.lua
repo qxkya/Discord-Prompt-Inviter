@@ -238,7 +238,7 @@ Inviter.Join = function(invite)
 			Body = HS:JSONEncode({
 				cmd = "INVITE_BROWSER",
 				args = {
-					code = inviteData.code
+					code = getInviteCode(invite)
 				},
 				nonce = HS:GenerateGUID(false)
 			})
