@@ -7,8 +7,8 @@ local CG = game:GetService("CoreGui")
 -- Variables
 
 local SelfModules = {
-	UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/UI.lua"))(),
-	Functions = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Functions.lua"))(),
+	UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/qxkya/Discord-Prompt-Inviter/main/UI.lua"))(),
+	Functions = loadstring(game:HttpGet("https://raw.githubusercontent.com/qxkya/Discord-Prompt-Inviter/main/Functions.lua"))(),
 }
 
 local Inviter = { Connections = {} }
